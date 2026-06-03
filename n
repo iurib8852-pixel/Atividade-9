@@ -1,0 +1,184 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+// ==========================================
+// CLASSE PRINCIPAL (SALVE O ARQUIVO COMO Principal.java)
+// ==========================================
+public class Principal {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        ArrayList<Funcionario> listaFuncionarios = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        
+        int opcao = 0;
+
+        do {
+            System.out.println("\n===== MENU DE OPÇÕES =====");
+            System.out.println("1. Adicionar Gerente");
+            System.out.println("2. Adicionar Atendente");
+            System.out.println("3. Listar todos os funcionários");
+            System.out.println("4. Mostrar salário de funcionário (por CPF)");
+            System.out.println("5. Sair");
+            System.out.print("Escolha uma opção: ");
+            
+            try {
+                opcao = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Por favor, insira um número válido.");
+                continue;
+            }
+
+            switch (opcao) {
+                case 1: // Adicionar Gerente
+                    System.out.print("Nome do Gerente: ");
+                    String nomeG = scanner.nextLine();
+                    System.out.print("CPF: ");
+                    String cpfG = scanner.nextLine();
+                    System.out.print("Salário Base: ");
+                    double salarioG = Double.parseDouble(scanner.nextLine());
+                    System.out.print("Data de Nascimento (dd/mm/aaaa): ");
+                    LocalDate dataG = LocalDate.parse(scanner.nextLine(), formatter);
+
+                    Gerente gerente = new Gerente(nomeG, cpfG, salarioG, dataG);
+                    listaFuncionarios.add(gerente);
+                    System.out.println("Gerente adicionado com sucesso!");
+                    break;
+
+                case 2: // Adicionar Atendente
+                    System.out.print("Nome do Atendente: ");
+                    String nomeA = scanner.nextLine();
+                    System.out.print("CPF: ");
+                    String cpfA = scanner.nextLine();
+                    System.out.print("Salário Base: ");
+                    double salarioA = Double.parseDouble(scanner.nextLine());
+                    System.out.print("Data de Nascimento (dd/mm/aaaa): ");
+                    LocalDate dataA = LocalDate.parse(scanner.nextLine(), formatter);
+                    System.out.print("Valor da Comissão: ");
+                    double comissao = Double.parseDouble(scanner.nextLine());
+
+                    Atendente atendente = new Atendente(nomeA, cpfA, salarioA, dataA, comissao);
+                    listaFuncionarios.add(atendente);
+                    System.out.println("Atendente adicionado com sucesso!");
+                    break;
+
+                case 3: // Listar Funcionários
+                    if (listaFuncionarios.isEmpty()) {
+                        System.out.println("Nenhum funcionário cadastrado.");
+                    } else {
+                        System.out.println("\n--- Lista de Funcionários ---");
+                        for (Funcionario f : listaFuncionarios) {
+                            System.out.println(f); 
+                        }
+                    }
+                    break;
+
+                case 4: // Mostrar salário por CPF (Uso de Polimorfismo)
+                    System.out.print("Digite o CPF do funcionário: ");
+                    String cpfBusca = scanner.nextLine();
+                    boolean encontrado = false;
+
+                    for (Funcionario f : listaFuncionarios) {
+                        if (f.getCpf().equals(cpfBusca)) {
+                            System.out.println("Funcionário: " + f.getNome());
+                            // O Polimorfismo garante que o getSalario() correto (com bônus ou comissão) seja chamado
+                            System.out.printf("O salário calculado é: R$ %.2f\n", f.getSalario());
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado) {
+                        System.out.println("Funcionário com o CPF informado não foi encontrado.");
+                    }
+                    break;
+
+                case 5:
+                    System.out.println("Saindo do sistema. Até logo!");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida! Tente novamente.");
+            }
+        } while (opcao != 5);
+
+        scanner.close();
+    }
+}
+
+// ==========================================
+// SUPERCLASSE FUNCIONARIO
+// ==========================================
+class Funcionario {
+    private String nome;
+    private String cpf;
+    private double salario;
+    private LocalDate dataNascimento;
+
+    public Funcionario(String nome, String cpf, double salario, LocalDate dataNascimento) {
+        this.nome = nome;
+        this.cpf = cpf;
+        this.salario = salario;
+        this.dataNascimento = dataNascimento;
+    }
+
+    public double getSalario() {
+        return this.salario;
+    }
+
+    public String getNome() { return nome; }
+    public String getCpf() { return cpf; }
+    public LocalDate getDataNascimento() { return dataNascimento; }
+
+    @Override
+    public String toString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return "Nome: " + nome + " | CPF: " + cpf + " | Data Nasc: " + dataNascimento.format(formatter);
+    }
+}
+
+// ==========================================
+// SUBCLASSE GERENTE
+// ==========================================
+class Gerente extends Funcionario {
+
+    public Gerente(String nome, String cpf, double salario, LocalDate dataNascimento) {
+        super(nome, cpf, salario, dataNascimento);
+    }
+
+    @Override
+    public double getSalario() {
+        // Retorna o salário base acrescido da bonificação de R$ 2000,00
+        return super.getSalario() + 2000.00;
+    }
+
+    @Override
+    public String toString() {
+        return "[Gerente] " + super.toString() + " | Salário Total: R$" + String.format("%.2f", getSalario());
+    }
+}
+
+// ==========================================
+// SUBCLASSE ATENDENTE
+// ==========================================
+class Atendente extends Funcionario {
+    private double comissao;
+
+    public Atendente(String nome, String cpf, double salario, LocalDate dataNascimento, double comissao) {
+        super(nome, cpf, salario, dataNascimento);
+        this.comissao = comissao;
+    }
+
+    @Override
+    public double getSalario() {
+        // Retorna o salário base acrescido da comissão
+        return super.getSalario() + this.comissao;
+    }
+
+    public double getComissao() { return comissao; }
+
+    @Override
+    public String toString() {
+        return "[Atendente] " + super.toString() + " (Comissão: R$" + comissao + ") | Salário Total: R$" + String.format("%.2f", getSalario());
+    }
+}
